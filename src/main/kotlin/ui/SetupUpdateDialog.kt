@@ -1,5 +1,7 @@
 package ui
 
+import file.Download
+import global.Log
 import tablelayout.Table
 import java.awt.Color
 import java.awt.Component
@@ -13,6 +15,7 @@ import javax.imageio.ImageIO
 import javax.swing.JDialog
 import javax.swing.JLabel
 import javax.swing.JPanel
+import kotlin.system.exitProcess
 
 
 class SetupUpdateDialog(message: String) : JDialog() {
@@ -21,8 +24,8 @@ class SetupUpdateDialog(message: String) : JDialog() {
     private val contentTable = Table()
 
     private val buttonVisit = SetupButton("Open Website")
-    private val buttonSnooze = SetupButton("Later")
-    private val buttonDeny = SetupButton("Close")
+    private val buttonNow = SetupButton("Download Now")
+    private val buttonDeny = SetupButton("Continue")
 
     init {
         title = "Notification"
@@ -33,7 +36,7 @@ class SetupUpdateDialog(message: String) : JDialog() {
         contentPane.add(contentTable)
         modalityType = ModalityType.APPLICATION_MODAL
         try {
-            setIconImage(ImageIO.read(SetupUpdateDialog::class.java.getResourceAsStream("/icon.png")))
+            setIconImage(ImageIO.read(javaClass.classLoader.getResource("icon.png")))
         } catch (e: IOException) {
             e.printStackTrace()
         }
@@ -44,17 +47,21 @@ class SetupUpdateDialog(message: String) : JDialog() {
 
         buttonDeny.addActionListener {
             dispose()
-            UiManager.initUI()
         }
 
-        buttonSnooze.addActionListener {
+        buttonNow.addActionListener {
+            Log.print("Updating setup..")
+            MainWindow.ui.disableButtons()
+            Download.downloadSetup {
+                Runtime.getRuntime().exec(arrayOf("java",  "-jar", it.fileName.toAbsolutePath().toString()))
+                exitProcess(0)
+            }
             dispose()
-            UiManager.initUI()
         }
 
         buttonVisit.addActionListener {
             openWebpage(URL("https://wurstlang.org/"))
-            System.exit(0)
+            exitProcess(0)
         }
 
         setLocationRelativeTo(null)
@@ -73,7 +80,7 @@ class SetupUpdateDialog(message: String) : JDialog() {
 
         val buttonTable = Table()
         buttonTable.addCell(buttonVisit).pad(0f, 6f, 0f, 6f)
-        buttonTable.addCell(buttonSnooze).pad(0f, 6f, 0f, 6f)
+        buttonTable.addCell(buttonNow).pad(0f, 6f, 0f, 6f)
         buttonTable.addCell(buttonDeny).pad(0f, 6f, 0f, 6f)
 
         contentTable.addCell(buttonTable).growX().padTop(6f)

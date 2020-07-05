@@ -32,18 +32,18 @@ object ConnectionManager {
                 ?: JSONObject()
     }
 
-    fun checkConnectivity(): NetStatus {
+    fun checkConnectivity(url: String): NetStatus {
         // If google can be reached, the client is not offline
+        netStatus = NetStatus.SERVER_CONTACT
         try {
-            val json = resty.json("http://google.com")
-            if (json == null || json.toString().isBlank()) {
+            val json = resty.json(url)
+            if (netStatus == NetStatus.SERVER_CONTACT && (json == null || json.toString().isBlank())) {
                 netStatus = NetStatus.CLIENT_OFFLINE
                 return netStatus
             }
         } catch (e: IOException) {
-            log.info("couldn't contact google: " + e.localizedMessage)
+            log.debug("couldn't contact: " + e.localizedMessage)
         }
-        netStatus = NetStatus.SERVER_CONTACT
 
         return netStatus
     }
@@ -57,7 +57,7 @@ object ConnectionManager {
                 NetStatus.ONLINE
             }
         } catch (e: IOException) {
-            log.info("couldn't contact wurst jenkins: " + e.localizedMessage)
+            log.debug("couldn't contact wurst jenkins: " + e.localizedMessage)
             NetStatus.SERVER_OFFLINE
         }
     }
@@ -73,6 +73,7 @@ object ConnectionManager {
     }
 
     fun getLatestSetupBuild(): Int {
+		log.debug("getting latest setup build")
         return try {
             getBuildNumber("https://" + WURST_SETUP_URL, MASTER_BRANCH)
         } catch (e: IOException) {
@@ -81,6 +82,7 @@ object ConnectionManager {
     }
 
     fun getLatestCompilerBuild(): Int {
+		log.debug("getting latest compiler build")
         return try {
             getBuildNumber("https://" + WURST_COMPILER_URL, MASTER_BRANCH)
         } catch (e: IOException) {
@@ -89,6 +91,7 @@ object ConnectionManager {
     }
 
     fun checkWurstBuild(): NetStatus {
+		log.debug("checking wurst build")
         contactWurstServer("https://" + WURST_COMPILER_URL)
         if (netStatus == NetStatus.SERVER_OFFLINE) {
             contactWurstServer("http://" + WURST_COMPILER_URL)

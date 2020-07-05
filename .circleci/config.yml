@@ -1,0 +1,26 @@
+version: 2
+
+jobs:
+    build:
+
+        docker:
+            - image: circleci/openjdk:8-jdk
+
+        steps:
+            - checkout
+
+            - run:
+                  name: Build
+                  command: gradle clean versionInfoFile dist
+
+            - run:
+                  name: Test
+                  command: gradle test --info --stacktrace
+
+            - run:
+                  name: Jacoco
+                  command: gradle jacocoTestReport
+
+            - run:
+                  name: Codecov
+                  command: bash <(curl -s https://codecov.io/bash)

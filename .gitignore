@@ -13,3 +13,5 @@ downloads/
 src-gen/
 
 setup.log
+local.properties
+wurstpack_compiler.zip
